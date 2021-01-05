@@ -133,12 +133,12 @@
 						type:search_interest.value,//搜索结果的类型
 						pageSize:5,//一页显示5条
 						pageIndex:2,//默认在第几页显示
-						city:'010',//区号北京区号010
+						//city:'010',区号北京区号010
 						citylimit:true,//是否强制限制在设定的城市内搜索
 						map:map,//展示在哪个地图里
 						panel:'content_panel'//放在哪个元素下
 						//第一个参数是关键字,第二个是中心点,第三个是范围,第四个是匿名函数
-					}).searchNearBy('',[map.getCenter()],2000,function() {
+					}).searchNearBy('',[map.getCenter().R,map.getCenter().Q],2000,function() {
 
 					});
 				}
