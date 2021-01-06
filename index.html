@@ -2,7 +2,7 @@
 <html>
 <head>
 	<title>我的第一个地图</title>
-	<script type="text/javascript" src="https://webapi.amap.com/maps?v=1.4.15&key=83f899eea56cc15af4548698e1b746c5&plugin=AMap.Autocomplete,AMap.PlaceSearch"></script> 
+	<script type="text/javascript" src="https://webapi.amap.com/maps?v=1.4.15&key=83f899eea56cc15af4548698e1b746c5&plugin=AMap.Autocomplete,AMap.Driving,AMap.PlaceSearch,AMap.ToolBar,AMap.OverView,AMap.Scale,AMap.ControlBar,AMap.MapType"></script> 
 	<style type="text/css">
 		*{
 			padding: 0px;
@@ -20,13 +20,21 @@
 			width: 260px;
 			/*height: 500px;*/
 			position: absolute;
-			left: 5px;
-			top: 5px;
+			left: 70px;
+			top: 20px;
 			background-color: #dbdee2;
 			border-radius: 3px;
 			border:1px dashed #dbdee2;
 			box-shadow: 0 2px 3px -1px red; 
-		} 
+		}
+		#startNode,#endNode{
+			width: 132px;
+		    height: 25px;
+		    padding-left: 7px;
+		    margin-bottom: 5px;
+		    border:1px solid pink;
+		    border-radius: 3px;
+		}
 		#search_content{
 		    width: 200px;
 		    height: 25px;
@@ -43,6 +51,12 @@
 		}
 		#btn{
 			width: 40px;
+			height: 29px;
+			border:2px solid pink;
+		    border-radius: 3px;
+		}
+		#btn_dh{
+			width: 73px;
 			height: 29px;
 			border:2px solid pink;
 		    border-radius: 3px;
@@ -69,11 +83,25 @@
 		    border-radius: 3px;
 		    margin-bottom: 20px;
 		}
+		#panel{
+			position: fixed;
+			background-color: white;
+			top: 230px;
+			right: 10px;
+			width: 280px;
+		}
+		.amap-copyright{
+			opacity: 0;
+		}
 	</style>
 </head>
 <body>
 	<div id="container"></div>
+	<div id="panel"></div>
 	<div id="search_panel">
+		起点:<input type="" name="" id="startNode"><br/>
+		终点:<input type="" name="" id="endNode">
+		<button id="btn_dh">开始导航</button>
 		<input type="text" name="" placeholder="搜索的地区" id="search_content">
 		<button id="btn">搜索</button>
 
@@ -90,8 +118,30 @@
 	<script type="text/javascript">
 		var map = new AMap.Map('container',{
 			zoom:15,//初始地图的级别
-			center:[116.397485,39.90914]// 初始地图的中心点
+			viewMode:'3D',//默认是2D
+			buildingAnimation:true,
+			//center:[116.397485,39.90914]// 初始地图的中心点
 		});
+
+		new AMap.Autocomplete({
+			input:'startNode'
+		});
+		new AMap.Autocomplete({
+			input:'endNode'
+		});
+
+		btn_dh.onclick= function() {
+			new AMap.Driving({
+			map:map,
+			panel:'panel'
+			}).search([
+			{keyword:startNode.value,city:'北京'},
+			{keyword:endNode.value,city:'北京'}
+			],function(status,data) {
+				console.log(data);
+			});
+		}
+
 
 		var search_panel = new AMap.Autocomplete({
 			input:'search_content'//绑定的文本框的id值
@@ -113,11 +163,15 @@
 			// console.log(this.value);
 			new AMap.Autocomplete().search(this.value,function(status,data){
 				// console.log(data);
-				WQ = data.tips[0].location.Q;
-				JR = data.tips[0].location.R;
-				// console.log(WQ+','+JR);
-				btn.onclick = function(){
-					map.setCenter([JR,WQ]);
+				if(data.tips){
+					WQ = data.tips[0].location.Q;
+					JR = data.tips[0].location.R;
+					// console.log(WQ+','+JR);
+					btn.onclick = function(){
+						if(WQ && JR){
+							map.setCenter([JR,WQ]);
+						}
+					}
 				}
 			});
 		}
@@ -129,12 +183,13 @@
 		// 兴趣点搜索
 		AMap.service(['AMap.PlaceSearch'], function() {
 			btn_interest.onclick = function() {
+					map.clearMap();
 					new AMap.PlaceSearch({
 						type:search_interest.value,//搜索结果的类型
 						pageSize:5,//一页显示5条
 						pageIndex:2,//默认在第几页显示
 						//city:'010',区号北京区号010
-						citylimit:true,//是否强制限制在设定的城市内搜索
+						//citylimit:true,//是否强制限制在设定的城市内搜索
 						map:map,//展示在哪个地图里
 						panel:'content_panel'//放在哪个元素下
 						//第一个参数是关键字,第二个是中心点,第三个是范围,第四个是匿名函数
@@ -152,6 +207,30 @@
 			map.clearLimitBounds();
 		}
 
+		// AMap.MapType地图类型切换插件
+
+		map.addControl(new AMap.MapType({
+			defaultType:0, //0默认,1代表的是卫星
+			showRoad:true  //显示路况
+		}));
+
+
+
+		// 有下角的鹰眼插件
+		map.addControl(new AMap.OverView());
+		//AMap.Scale()比例尺控件
+		map.addControl(new AMap.Scale());
+		//AMap.ToolBar()工具条控件
+		map.addControl(new AMap.ToolBar());
+		//翻转控件
+		map.addControl(new AMap.ControlBar({
+			showZoomBar:true,//调节级别
+			// showControlButton:false,//可以取消  倾斜旋转角度的按钮
+			position:{
+				right:'80px',//控件离右侧距离50px
+				top:'20px'//控件离上距离30px
+			}
+		}));
 	</script>
 </body>
 </html>
